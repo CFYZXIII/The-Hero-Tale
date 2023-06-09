@@ -6,74 +6,84 @@ using UnityEngine.Rendering;
 using UnityEngine.Tilemaps;
 using System.Linq;
 
-public class Player : MonoBehaviour
+public class Player : PathFinder
 {
-    [SerializeField] private Tilemap map;
-    [SerializeField] private CTile tile;
+    /// <summary>
+    /// стрелка пути
+    /// </summary>
+    [SerializeField] Transform arrow;
+    /// <summary>
+    /// Список стрело пути
+    /// </summary>
+    private List<Transform> pathArrows = new List<Transform>();
 
-    private CTile startTile;
-    private Vector2 startPosition;
+    public override Vector2 EndNodePosition => Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
+    public override void BeforePathFinding()
+    {
+        ClearPathArrows(pathArrows);
+    }
 
-
-    List<Node> openList = new List<Node>();
-    List<Node> closedList = new List<Node>();
+    public override void AfterPathFinding()
+    {
+        DrawPath(pathArrows);
+    }
 
     private void Start()
     {
-
-    }
-
-    public Vector2 MousePos
-    {
-        get
+        MovePoints = BaseMovePoints;
+        for (int i = 0; i < 10; i++)
         {
-          return  Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            var path = Instantiate(arrow);
+            path.gameObject.SetActive(false);
+            pathArrows.Add(path);
         }
     }
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !moved)
         {
-            var endNode = CTileMap.Instance.GetNode(MousePos);
-
-            var startNode = CTileMap.Instance.GetNode(transform.position);
-            startNode.GCost = 0;
-            startNode.HCost = System.Math.Round(startNode.Distance(endNode), 2);
-            startNode.FCost = startNode.HCost + startNode.GCost;
-            openList.Add(startNode);
-            closedList.Add(startNode);
-
-            Node currentNode = null;
-
-            while (openList.Count > 0)
-            {
-                currentNode = openList.OrderBy(x=>x.FCost).First();
-                CTileMap.Instance.DrawMayBe(currentNode);
-                if (currentNode.Equals(endNode))
-                    break;
-                CTileMap.Instance.GetAllNeighbors(currentNode, endNode, openList,closedList);
-               
-            }
-
-            CTileMap.Instance.DrawPath(currentNode);
-
-
-           // double dist2 = System.Math.Round( startNode.Distance(endNode),2);
-
-           // Debug.Log(currentNode);
-
-
-
-            //Положение
-            
-
+            FindPath();
+            ClearPathNodes();
         }
+    }
+    private bool moved;
+    private IEnumerator Move(int i)
+    {
+        yield return null;
+        if (i < pathNodes.Count && MovePoints > 0)
+        {
+            moved = true;
+            while (((Vector2)transform.position - pathNodes[i].transformPos).magnitude > 0.001f)
+            {
+                transform.position = Vector2.MoveTowards(transform.position, pathNodes[i].transformPos, 0.01f);
+                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, pathNodes[i].algle), 0.1f);
+                yield return new WaitForSeconds(0.01f);
+            }
+            pathArrows[i].gameObject.SetActive(false);
+            i++;
+            MovePoints--;
 
-        
+
+            StartCoroutine(Move(i));
+        }
+        else
+            moved = false;
 
     }
 
-    
+    public void GoMove()
+    {
+        StartCoroutine(Move(0));
+    }
+
+    public void NewTurn()
+    {
+        MovePoints = BaseMovePoints;
+    }
+
+
+
+
 }

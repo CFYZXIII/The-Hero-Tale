@@ -1,14 +1,15 @@
 using System.Collections.Generic;
+using System.IO;
+using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using static UnityEditor.PlayerSettings;
 
 public class CTileMap : MonoBehaviour
 {
-    [SerializeField] CTile tile;
-    [SerializeField] CTile pathTile;
-    [SerializeField] CTile maybeTile;
-    [SerializeField] CTile endTile;
+    
+    //[SerializeField] Transform target;
 
     public static CTileMap Instance;
     private Tilemap tilemap;
@@ -35,15 +36,14 @@ public class CTileMap : MonoBehaviour
                 CTile tile = tilemap.GetTile<CTile>((Vector3Int)tilePos);
                 if (tile != null)
                 {
-                    if (tile.walkable)
-                    {
-                    }
                     Node node = new Node(tile.walkable, tilePos, (Vector2)tilemap.CellToWorld((Vector3Int)tilePos));
                     NodeCollection[tilePos] = node;
                 }
 
             }
         }
+
+        
     }
 
     public Node GetNode(Vector3 position)
@@ -73,11 +73,8 @@ public class CTileMap : MonoBehaviour
             var neighborNode = GetNode(position);
             if (neighborNode != null && neighborNode.walkable && !closedList.Contains(neighborNode))
             {
-                neighborNode.GCost = node.GCost + node.Distance(neighborNode);
-                neighborNode.HCost = neighborNode.Distance(endNode);
-                neighborNode.FCost = neighborNode.GCost + neighborNode.HCost;
+                neighborNode.CalculateCosts(node.GCost + System.Math.Round(node.Distance(neighborNode), 2), endNode);
 
-                tilemap.SetTile((Vector3Int)position, tile);
                 neighborNode.previousNode = node;
                 openList.Add(neighborNode);
                 closedList.Add(neighborNode);
@@ -108,26 +105,18 @@ public class CTileMap : MonoBehaviour
         return positions;
     }
 
-    public void DrawPath(Node node)
-    {
-        var curNode = node;
+   
+    public List<Node> GetPositions(Node node)
+    {        
+        List<Node> nodes = new List<Node>();
 
-        while (curNode != null) 
-        {
-            tilemap.SetTile((Vector3Int)curNode.tilePos, pathTile);
-            curNode = curNode.previousNode;
+        while (node.previousNode != null)
+        {            
+            nodes.Add(node);
+            node = node.previousNode;
         }
-    }
-
-    public void DrawMayBe(Node node)
-    {
-            tilemap.SetTile((Vector3Int)node.tilePos, maybeTile);
-    }
-
-    public void DrawEnd(Node node)
-    {
-        tilemap.SetTile((Vector3Int)node.tilePos, endTile);
-    }
-
+        nodes.Reverse();
+        return nodes;
+    }   
 
 }
