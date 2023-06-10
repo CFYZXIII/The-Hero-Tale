@@ -1,9 +1,9 @@
-using System;
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
+using static Player;
 
 
 public class PathFinder :MonoBehaviour, IPathFinder
@@ -36,18 +36,22 @@ public class PathFinder :MonoBehaviour, IPathFinder
     protected int MovePoints;
 
 
-
-    
+    /// <summary>
+    /// текущий шаг
+    /// </summary>
+    protected int curentStep;
+    //тут наверное воид лучше
     /// <summary>
     /// Метод поиска пути
     /// </summary>
     /// <returns></returns>
-    public virtual List<Node> FindPath()
+    public virtual void FindPath()
     {
 
         Node endNode = CTileMap.Instance.GetNode(EndNodePosition);
         if (endNode != null)
         {
+            curentStep = 0;
             BeforePathFinding();
             pathNodes = new List<Node>();
             var startNode = CTileMap.Instance.GetNode(transform.position);
@@ -71,7 +75,7 @@ public class PathFinder :MonoBehaviour, IPathFinder
             AfterPathFinding();
 
         }
-        return pathNodes;
+       
     }
 
     /// <summary>
@@ -139,6 +143,63 @@ public class PathFinder :MonoBehaviour, IPathFinder
         {
             p.gameObject.SetActive(false);
         }
+        
     }
+
+    protected bool moved;
+    /// <summary>
+    /// Продолжение хода фигня, пофиксить
+    /// </summary>
+    /// <param name="curentStep"></param>
+    /// <returns></returns>
+    protected IEnumerator Move()
+    {
+        yield return null;
+        if (curentStep < pathNodes.Count && MovePoints > 0)
+        {
+            moved = true;
+            while (((Vector2)transform.position - pathNodes[curentStep].transformPos).magnitude > 0.001f)
+            {
+                transform.position = Vector2.MoveTowards(transform.position, pathNodes[curentStep].transformPos, 0.01f);
+                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, pathNodes[curentStep].algle), 0.1f);
+                yield return new WaitForSeconds(0.01f);
+            }
+            //Событие на каждый шаг
+            OnStepEnd.Invoke();
+            
+            StartCoroutine(Move());
+            curentStep++;
+            MovePoints--;
+        }
+        else
+        {
+            
+        }
+
+    }
+
+
+    //тут различные события, пока там, потом возможно просто на делегаты поменяю
+
+    /// <summary>
+    /// Событие, вызываемое в конце хода
+    /// </summary>
+    public delegate void OnTurnEnded(IPathFinder pathFinder,Node node);
+    public static event OnTurnEnded OnTurnEnd;
+
+    public delegate void OnStepEnded();
+    public event OnStepEnded OnStepEnd;
+
+    protected void BeforeNewTurn()
+    {
+        moved = false;
+        OnTurnEnd?.Invoke(this, pathNodes[curentStep]);
+    }
+
+    public void GoMove()
+    {
+        StartCoroutine(Move());
+    }
+
 
 }

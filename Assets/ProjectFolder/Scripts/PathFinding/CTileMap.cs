@@ -1,10 +1,7 @@
 using System.Collections.Generic;
-using System.IO;
-using Unity.Mathematics;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using static UnityEditor.PlayerSettings;
+
 
 public class CTileMap : MonoBehaviour
 {

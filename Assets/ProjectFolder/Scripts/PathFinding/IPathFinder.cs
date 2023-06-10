@@ -9,7 +9,7 @@ public interface IPathFinder
     /// </summary>
     public Vector2 EndNodePosition { get; }
 
-    public List<Node> FindPath();
+    public void FindPath();
 
 
 }

@@ -1,10 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Tilemaps;
-using System.Linq;
+
 
 public class Player : PathFinder
 {
@@ -38,6 +35,15 @@ public class Player : PathFinder
             path.gameObject.SetActive(false);
             pathArrows.Add(path);
         }
+
+        //OnTurnEnd += DDD;
+        OnStepEnd += Player_OnStepEnd;
+
+    }
+
+    private void Player_OnStepEnd()
+    {
+        pathArrows[curentStep].gameObject.SetActive(false);
     }
 
     void Update()
@@ -48,42 +54,22 @@ public class Player : PathFinder
             ClearPathNodes();
         }
     }
-    private bool moved;
-    private IEnumerator Move(int i)
-    {
-        yield return null;
-        if (i < pathNodes.Count && MovePoints > 0)
-        {
-            moved = true;
-            while (((Vector2)transform.position - pathNodes[i].transformPos).magnitude > 0.001f)
-            {
-                transform.position = Vector2.MoveTowards(transform.position, pathNodes[i].transformPos, 0.01f);
-                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, pathNodes[i].algle), 0.1f);
-                yield return new WaitForSeconds(0.01f);
-            }
-            pathArrows[i].gameObject.SetActive(false);
-            i++;
-            MovePoints--;
+    
+
+    
 
 
-            StartCoroutine(Move(i));
-        }
-        else
-            moved = false;
-
-    }
-
-    public void GoMove()
-    {
-        StartCoroutine(Move(0));
-    }
+    
 
     public void NewTurn()
     {
+        //тут походу асинхронный метод, надо ждать выполенния
+        BeforeNewTurn();
+
         MovePoints = BaseMovePoints;
     }
 
 
-
+    
 
 }
