@@ -14,12 +14,18 @@ public class BaseMonster : PathFinder
     private void Start()
     {
         OnTurnEnd += BaseMonster_OnTurnEnd;
+        
     }
 
     private void BaseMonster_OnTurnEnd(IPathFinder pathFinder, Node node)
     {
-        PlayerNode = node;
-        FindPath();
-        GoMove();
+        if (!moved)
+        {
+            MovePoints = BaseMovePoints;
+            PlayerNode = node;
+            FindPath();
+            ClearPathNodes();
+            GoMove();
+        }
     }
 }

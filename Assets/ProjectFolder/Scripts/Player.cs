@@ -65,7 +65,6 @@ public class Player : PathFinder
     {
         //тут походу асинхронный метод, надо ждать выполенния
         BeforeNewTurn();
-
         MovePoints = BaseMovePoints;
     }
 

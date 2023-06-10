@@ -165,7 +165,7 @@ public class PathFinder :MonoBehaviour, IPathFinder
                 yield return new WaitForSeconds(0.01f);
             }
             //Событие на каждый шаг
-            OnStepEnd.Invoke();
+            OnStepEnd?.Invoke();
             
             StartCoroutine(Move());
             curentStep++;
@@ -173,7 +173,7 @@ public class PathFinder :MonoBehaviour, IPathFinder
         }
         else
         {
-            
+            moved = false;
         }
 
     }
@@ -193,7 +193,7 @@ public class PathFinder :MonoBehaviour, IPathFinder
     protected void BeforeNewTurn()
     {
         moved = false;
-        OnTurnEnd?.Invoke(this, pathNodes[curentStep]);
+        OnTurnEnd?.Invoke(this, pathNodes[curentStep-1]);
     }
 
     public void GoMove()
