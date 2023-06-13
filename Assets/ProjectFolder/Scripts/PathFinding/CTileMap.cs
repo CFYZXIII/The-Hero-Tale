@@ -13,6 +13,7 @@ public class CTileMap : MonoBehaviour
 
     void Start()
     {
+        
         if (Instance == null)
         {
             Instance = this;

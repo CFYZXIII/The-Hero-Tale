@@ -34,9 +34,6 @@ public class Node
     /// <summary>
     /// угол поворота, при прохождении через нод
     /// </summary>
-    public float algle;
-
-
 
     public Node(bool walkable, Vector2Int tilePos, Vector2 transformPos)
     {

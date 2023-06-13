@@ -6,7 +6,7 @@ using UnityEngine;
 using static Player;
 
 
-public class PathFinder :MonoBehaviour, IPathFinder
+public class PathFinder : MonoBehaviour, IPathFinder
 {
     /// <summary>
     /// Позиция целевого нода
@@ -24,7 +24,7 @@ public class PathFinder :MonoBehaviour, IPathFinder
     /// Ноды посторения пути
     /// </summary>
     /// 
-    public List<Node> pathNodes; 
+    public List<Node> pathNodes;
     /// <summary>
     ///Стартовые Очки движения
     /// </summary>
@@ -75,7 +75,7 @@ public class PathFinder :MonoBehaviour, IPathFinder
             AfterPathFinding();
 
         }
-       
+
     }
 
     /// <summary>
@@ -107,16 +107,14 @@ public class PathFinder :MonoBehaviour, IPathFinder
     /// </summary>
     /// <param name="node"></param>
     /// <param name="i"></param>
-    protected void DrawPath( List<Transform> pathArrows)
+    protected void DrawPath(List<Transform> pathArrows)
     {
         for (int i = pathNodes.Count - 1; i >= 0; i--)
         {
             Transform arrow = null;
 
-            Vector2 d = pathNodes[i].transformPos - pathNodes[i].previousNode.transformPos;
-
-            var angle = Mathf.Atan2(d.y, d.x) * 180 / Mathf.PI;
-            pathNodes[i].algle = angle;
+            var angle = Angle(pathNodes[i].transformPos, pathNodes[i].previousNode.transformPos);
+            
             if (i < pathArrows.Count - 1)
             {
                 arrow = pathArrows[i];
@@ -128,10 +126,17 @@ public class PathFinder :MonoBehaviour, IPathFinder
             }
 
             arrow.gameObject.SetActive(true);
-           
+
             arrow.rotation = Quaternion.Euler(0, 0, angle);
             arrow.position = pathNodes[i].transformPos;
         }
+    }
+
+    protected float Angle(Vector2 t1, Vector2 t2)
+    {
+        Vector2 d = t1 - t2;
+
+        return  Mathf.Atan2(d.y, d.x) * 180 / Mathf.PI;
     }
 
     /// <summary>
@@ -143,12 +148,12 @@ public class PathFinder :MonoBehaviour, IPathFinder
         {
             p.gameObject.SetActive(false);
         }
-        
+
     }
 
     protected bool moved;
     /// <summary>
-    /// Продолжение хода фигня, пофиксить
+    /// Переделать на дотвин
     /// </summary>
     /// <param name="curentStep"></param>
     /// <returns></returns>
@@ -158,15 +163,16 @@ public class PathFinder :MonoBehaviour, IPathFinder
         if (curentStep < pathNodes.Count && MovePoints > 0)
         {
             moved = true;
+            var angle = Angle(pathNodes[curentStep].transformPos, transform.position);
             while (((Vector2)transform.position - pathNodes[curentStep].transformPos).magnitude > 0.001f)
             {
                 transform.position = Vector2.MoveTowards(transform.position, pathNodes[curentStep].transformPos, 0.01f);
-                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, pathNodes[curentStep].algle), 0.1f);
+                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, angle), 0.1f);
                 yield return new WaitForSeconds(0.01f);
             }
             //Событие на каждый шаг
             OnStepEnd?.Invoke();
-            
+
             StartCoroutine(Move());
             curentStep++;
             MovePoints--;
@@ -177,6 +183,9 @@ public class PathFinder :MonoBehaviour, IPathFinder
         }
 
     }
+
+   
+       
 
 
     //тут различные события, пока там, потом возможно просто на делегаты поменяю
