@@ -8,17 +8,17 @@ public class CTileMap : MonoBehaviour
     
     //[SerializeField] Transform target;
 
-    public static CTileMap Instance;
+    //public static CTileMap Instance;
     private Tilemap tilemap;
 
     void Start()
     {
         
-        if (Instance == null)
-        {
-            Instance = this;
-            NodeCollection = new Dictionary<Vector2Int, Node>();
-        }
+        //if (Instance == null)
+        //{
+        //    Instance = this;
+        //    NodeCollection = new Dictionary<Vector2Int, Node>();
+        //}
 
         tilemap = GetComponent<Tilemap>();
 
@@ -71,8 +71,8 @@ public class CTileMap : MonoBehaviour
             var neighborNode = GetNode(position);
             if (neighborNode != null && neighborNode.walkable && !closedList.Contains(neighborNode))
             {
-                neighborNode.CalculateCosts(node.GCost + System.Math.Round(node.Distance(neighborNode), 2), endNode);
-
+                //тут возможно просто +1 вместо дистанции
+                neighborNode.CalculateCosts(node.GCost + node.Distance(neighborNode), endNode);
                 neighborNode.previousNode = node;
                 openList.Add(neighborNode);
                 closedList.Add(neighborNode);
@@ -82,11 +82,11 @@ public class CTileMap : MonoBehaviour
         openList.Remove(node);
     }
 
-    public List<Vector2Int> CalculateNeighborsPositions(Vector2Int tilepos)
+    public List<Vector2> CalculateNeighborsPositions(Vector2 tilepos)
     {
-        var positions = new List<Vector2Int>();
+        var positions = new List<Vector2>();
         // верхний
-        positions.Add(new Vector2Int(1, 0) + tilepos);
+        positions.Add(new Vector2(1, 0) + tilepos);
         //нижнbй
         positions.Add(new Vector2Int(-1, 0) + tilepos);
         //левый 1

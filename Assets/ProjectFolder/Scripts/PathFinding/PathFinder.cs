@@ -48,13 +48,13 @@ public class PathFinder : MonoBehaviour, IPathFinder
     public virtual void FindPath()
     {
 
-        Node endNode = CTileMap.Instance.GetNode(EndNodePosition);
+        Node endNode = HexGrig.Instance.GetTileNode(EndNodePosition);
         if (endNode != null)
         {
             curentStep = 0;
             BeforePathFinding();
             pathNodes = new List<Node>();
-            var startNode = CTileMap.Instance.GetNode(transform.position);
+            var startNode = HexGrig.Instance.GetTileNode(transform.position);
             startNode.CalculateCosts(0, endNode);
 
             openList.Add(startNode);
@@ -68,10 +68,10 @@ public class PathFinder : MonoBehaviour, IPathFinder
 
                 if (currentNode.Equals(endNode))
                     break;
-                CTileMap.Instance.GetAllNeighbors(currentNode, endNode, openList, closedList);
+                HexGrig.Instance.GetAllNeighbors(currentNode, endNode, openList, closedList);
 
             }
-            pathNodes = CTileMap.Instance.GetPositions(currentNode);
+            pathNodes = HexGrig.Instance.GetPositions(currentNode);
             AfterPathFinding();
 
         }

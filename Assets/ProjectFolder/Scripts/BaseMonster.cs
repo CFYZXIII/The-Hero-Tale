@@ -13,8 +13,7 @@ public class BaseMonster : PathFinder
 
     private void Start()
     {
-        OnTurnEnd += BaseMonster_OnTurnEnd;
-        
+        OnTurnEnd += BaseMonster_OnTurnEnd;       
     }
 
     private void BaseMonster_OnTurnEnd(IPathFinder pathFinder, Node node)

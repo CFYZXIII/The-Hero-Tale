@@ -1,5 +1,6 @@
 
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 public class Node 
 {
@@ -10,15 +11,15 @@ public class Node
     /// <summary>
     /// Стоимость попадания в этот нод
     /// </summary>
-    public double GCost;
+    public int GCost;
     /// <summary>
     /// Стоимость попадания из этого нода в финальный нод
     /// </summary>
-    public double HCost;
+    public int HCost;
     /// <summary>
     /// Суммарная стоимость
     /// </summary>
-    public double FCost;
+    public int FCost;
     /// <summary>
     /// Нод, из которго пришли
     /// </summary>
@@ -26,7 +27,7 @@ public class Node
     /// <summary>
     /// Позиция нода на сетке
     /// </summary>
-    public Vector2Int tilePos;
+    public Vector2 tilePos;
     /// <summary>
     /// Позиция нода в мире инры
     /// </summary>
@@ -35,24 +36,44 @@ public class Node
     /// угол поворота, при прохождении через нод
     /// </summary>
 
-    public Node(bool walkable, Vector2Int tilePos, Vector2 transformPos)
+    public Node(bool walkable, Vector2 tilePos, Vector2 transformPos)
     {
-        HCost = FCost = Mathf.Infinity;
+        HCost = FCost = int.MaxValue;
         GCost = 0;
         this.tilePos = tilePos;
         this.transformPos = transformPos;
         this.walkable = walkable;
     }
 
-    public float Distance(Node node)
+    public int Distance(Node node)
     {
-        return Vector2.Distance(this.transformPos,node.transformPos);
+        Vector2 startPosition = tilePos;
+        Vector2 endPosition = node.tilePos;
+
+        int nodeCount = 0;
+
+        while (endPosition.y != startPosition.y)
+        {
+            //Расстояние
+            Vector2 distance = endPosition - startPosition;
+            //Направление
+            Vector2 direction = new Vector2(Mathf.Sign(distance.x), Mathf.Sign(distance.y));
+            //Приращение
+            Vector2 dxy = new Vector2(0.5f, 1) * direction;
+            startPosition += dxy;
+            nodeCount++;
+        }
+
+        nodeCount += (int)Mathf.Abs(endPosition.x - startPosition.x);
+
+       
+        return nodeCount;
     }
 
-    public void CalculateCosts(double GCost, Node endNode)
+    public void CalculateCosts(int GCost, Node endNode)
     {
         this.GCost = GCost;
-        HCost = System.Math.Round(Distance(endNode), 2);
+        HCost = Distance(endNode);
         FCost = HCost + GCost;
     }
 

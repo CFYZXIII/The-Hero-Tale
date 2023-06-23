@@ -1,16 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
 public class HexGrig : MonoBehaviour
 {
-    [Header("GridSettings")]
+    [Header("Настрйки стеок")]
     [SerializeField] Vector2 GridSize;
-    [SerializeField][Range(0,3)] private float CellSize;
+    [SerializeField][Range(0,3)] float CellSize;
 
-
-    [SerializeField] HexTile prefab;
+    [Header("Ассет настроек")]
+    [SerializeField] HexTileGeneratorSettings settings;
 
     private Vector2 origin => transform.position;
     private const float Y_MODIFIER = 0.85f;
@@ -18,6 +19,7 @@ public class HexGrig : MonoBehaviour
 
     List<HexTile> tiles = new List<HexTile>();
 
+    #region Методы управления сетками
     [EditorButton("CreateGrid")]
     public void CreateGrid()
     {
@@ -34,8 +36,7 @@ public class HexGrig : MonoBehaviour
             for (int y = -Y1 +1; y <= Y2; y++)
             {
                 float dx = x;
-                var tile = Instantiate(prefab);
-                tile.transform.parent = transform;
+                var tile = HexTile.New(settings,transform);
 
                 var tilePosition = origin + new Vector2(CellSize * x, CellSize * y*Y_MODIFIER);
                 if (Mathf.Abs(y) % 2 == 1)
@@ -47,6 +48,7 @@ public class HexGrig : MonoBehaviour
                 tile.transform.localPosition = tilePosition;
                 tile.name =  dx+" "+y;
                 tiles.Add(tile);
+                
             }
         }        
     }
@@ -61,21 +63,43 @@ public class HexGrig : MonoBehaviour
         }
         tiles.Clear();
     }
+    #endregion
 
-    private Dictionary<Vector2,HexTile> tileDict = new Dictionary<Vector2,HexTile>();
+    public static HexGrig Instance;
+
+    private Dictionary<Vector2,Node> NodeCollection = new Dictionary<Vector2, Node>();
     private void Start()
     {
-        foreach (var tile in gameObject.transform.GetComponentsInChildren<Transform>())
+        if (Instance == null)
         {
-            if (!tile.gameObject.Equals(this.gameObject))
+            Instance = this;
+        }
+        foreach (var tile in Instance.gameObject.transform.GetComponentsInChildren<Transform>())
+        {
+            if (!tile.gameObject.Equals(Instance.gameObject))
             {
               var hexTile = tile.gameObject.GetComponent<HexTile>();
-                if(hexTile!=null)
-                    tileDict[hexTile.PostionInGrid] = hexTile;
+                if (hexTile != null)
+                {
+                    bool walkable = settings[hexTile.TileType].walkable;
+                    Instance.NodeCollection[hexTile.PostionInGrid] = new Node(walkable, hexTile.PostionInGrid, hexTile.transform.position);
+                }
             }
         }
     }
 
+    public List<Node> GetPositions(Node node)
+    {
+        List<Node> nodes = new List<Node>();
+
+        while (node.previousNode != null)
+        {
+            nodes.Add(node);
+            node = node.previousNode;
+        }
+        nodes.Reverse();
+        return nodes;
+    }
 
     private HexTile startTile;
     private HexTile endTile;
@@ -85,69 +109,120 @@ public class HexGrig : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
+        //if (Input.GetMouseButtonDown(0))
+        //{
             
-            RaycastHit2D hit = Physics2D.Raycast(mousePosition, mousePosition);
+        //    RaycastHit2D hit = Physics2D.Raycast(mousePosition, mousePosition);
 
-            // If it hits something...
-            if (hit.collider != null)
-            {
-                var hextile = hit.collider.gameObject.GetComponent<HexTile>();
-                if (hextile != null)
-                {
+        //    // If it hits something...
+        //    if (hit.collider != null)
+        //    {
+        //        var hextile = hit.collider.gameObject.GetComponent<HexTile>();
+        //        if (hextile != null)
+        //        {
 
-                    if (startTile != null)
-                    {
-                        endTile = hextile;
-                        endTile.SetColor();
-                        FindPath(endTile,startTile);
-                    }
+        //            if (startTile != null)
+        //            {
+        //                endTile = hextile;
+        //                //endTile.SetColor();
+        //                //GetDistance(endTile,startTile);
+        //            }
 
-                    if (startTile == null)
-                    {
-                        startTile = hextile;
-                        startTile.SetColor();
-                    }
+        //            if (startTile == null)
+        //            {
+        //                startTile = hextile;
+        //                //startTile.SetColor();
+        //            }
                     
-                }
+        //        }
+        //    }
+        //}
+
+        //if (Input.GetMouseButtonDown(1))
+        //{
+        //    startTile?.ReSetColor();
+        //    endTile?.ReSetColor();
+        //    startTile = endTile = null;
+        //}
+    }
+
+
+    public void GetAllNeighbors(Node node, Node endNode, List<Node> openList, List<Node> closedList)
+    {        
+        foreach (var pos in neighborPositions)
+        {
+            var position = pos + node.tilePos;
+            var neighborNode = GetNode(position);
+            if (neighborNode != null && neighborNode.walkable && !closedList.Contains(neighborNode))
+            {
+                //тут возможно просто +1 вместо дистанции
+                neighborNode.CalculateCosts(node.GCost + node.Distance(neighborNode), endNode);
+                neighborNode.previousNode = node;
+                openList.Add(neighborNode);
+                closedList.Add(neighborNode);
             }
         }
 
-        if (Input.GetMouseButtonDown(1))
-        {
-            startTile?.ReSetColor();
-            endTile?.ReSetColor();
-            startTile = endTile = null;
-        }
+        openList.Remove(node);
     }
 
-    public void FindPath(HexTile endTile, HexTile startTile)
+    private Node GetNode(Vector2 position)
     {
-        Vector2 startPosition = startTile.PostionInGrid;
-        Vector2 endPosition = endTile.PostionInGrid;
-
-
-
-
-        int nodeCount = 0;
-
-        while(endPosition.y!=startPosition.y)
-        {
-            //Расстояние
-            Vector2 distance = endPosition - startPosition;
-            //Направление
-            Vector2 direction = new Vector2(Mathf.Sign(distance.x), Mathf.Sign(distance.y));
-            //Приращение
-            Vector2 dxy = new Vector2(0.5f, 1) * direction;
-            startPosition += dxy;
-            nodeCount++;
-        }
-
-        nodeCount += (int)Mathf.Abs(endPosition.x-startPosition.x);
-
-        Debug.Log(nodeCount);
-        
-        
+        if (NodeCollection.ContainsKey(position))
+            return NodeCollection[position];
+        return null;
     }
+
+    public Node GetTileNode(Vector2 position)
+    {
+        RaycastHit2D hit = Physics2D.Raycast(position, position);
+        if (hit.collider != null)
+        {
+            var hextile = hit.collider.gameObject.GetComponent<HexTile>();
+            if (hextile != null)
+            {
+                return NodeCollection[hextile.PostionInGrid];
+            }
+        }
+        return null;
+    }
+
+
+
+
+    //public int GetDistance(HexTile endTile, HexTile startTile)
+    //{
+    //    Vector2 startPosition = startTile.PostionInGrid;
+    //    Vector2 endPosition = endTile.PostionInGrid;
+
+    //    int nodeCount = 0;
+
+    //    while(endPosition.y!=startPosition.y)
+    //    {
+    //        //Расстояние
+    //        Vector2 distance = endPosition - startPosition;
+    //        //Направление
+    //        Vector2 direction = new Vector2(Mathf.Sign(distance.x), Mathf.Sign(distance.y));
+    //        //Приращение
+    //        Vector2 dxy = new Vector2(0.5f, 1) * direction;
+    //        startPosition += dxy;
+    //        nodeCount++;
+    //    }
+
+    //    nodeCount += (int)Mathf.Abs(endPosition.x-startPosition.x);
+
+    //    Debug.Log(nodeCount);
+    //    return nodeCount;
+
+    //}
+
+    public List<Vector2> neighborPositions = new List<Vector2>()
+    {
+        new Vector2(-0.5f,1),
+        new Vector2(0.5f,1),
+        new Vector2(1,0),
+        new Vector2(0.5f,-1),
+        new Vector2(-0.5f,-1),
+        new Vector2(-1,0),
+    };
 }

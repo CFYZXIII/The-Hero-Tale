@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9ee9a830b912b043875a0fe6bb0aa73, type: 3}
+  m_Name: New Hex Tile Generator Settings
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 1702852917402209817, guid: 394873c2a8d0a5641b83ea1654cc0f69, type: 3}
+  settings:
+  - {fileID: 11400000, guid: 8efc1b421bcff594982cdacc6aa417d6, type: 2}
+  - {fileID: 11400000, guid: 719686256f21ffd498dbe8a2736a6b4c, type: 2}
+  - {fileID: 11400000, guid: c8a4150a4fa782f4597d1b360a9e5601, type: 2}

@@ -52,6 +52,7 @@ public class Player : PathFinder
         {
             FindPath();
             ClearPathNodes();
+            GoMove();
         }
     }
     

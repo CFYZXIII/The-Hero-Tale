@@ -1,18 +1,48 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
 [ExecuteInEditMode]
 public class HexTile : MonoBehaviour
 {
+   [SerializeField] private TileType type;
 
+    public TileType TileType => type;
 
-
-    public void SetColor()
+    public static HexTile New(HexTileGeneratorSettings settings, Transform parent)
     {
+        var tile =  Instantiate(settings.prefab);
+        tile.settings = settings;
+        tile.transform.parent = parent;
+        return tile;
+    }
+
+
+    [SerializeField] private HexTileGeneratorSettings settings;
+    public void OnValidate()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.Log("try changed " + settings != null);
+            if ( settings != null)
+            {
+                Debug.Log("changed");
+                SetColor(settings);
+            }
+        }
+    }
+
+
+    
+
+
+    public void SetColor(HexTileGeneratorSettings settings)
+    {
+        Debug.Log("Color set");
         var sr = GetComponent<SpriteRenderer>();
-        sr.color = Color.green;
+        sr.color = settings[type].color;
     }
 
     public void ReSetColor()
@@ -35,5 +65,6 @@ public class HexTile : MonoBehaviour
             return postionInGrid;
         }
     }
+
 
 }
